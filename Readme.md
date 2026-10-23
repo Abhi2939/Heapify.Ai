@@ -4,10 +4,6 @@ Heapify.Ai is a retrieval-augmented generation (RAG) tutor that answers question
 
 Built for the Immersive Learning Platform, Track 1 (RAG).
 
-- **Live demo:** `<your-space-url>`
-- **Code:** `<your-github-url>`
-- **Video walkthrough:** `<your-video-url>`
-
 ## What it does
 
 - Answers questions on priority queue operations, the heap array layout, `max_heapify`, `build_max_heap` (and why it is O(n)), the heap sort algorithm, and its properties (in place, not stable, O(n log n)).
@@ -75,7 +71,6 @@ Requires Python 3.11.
 
 ```bash
 git clone <your-github-url>
-cd 07_Heapify.Ai
 python -m venv venv
 venv\Scripts\activate            # Windows (use source venv/bin/activate on macOS/Linux)
 pip install -r requirements.txt
