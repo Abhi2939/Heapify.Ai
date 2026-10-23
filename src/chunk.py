@@ -24,7 +24,7 @@ def strip_repeated_lines(docs, thresh=0.4):
     for d in docs:
         by_src.setdefault(d.metadata["source_file"], []).append(d)
     for group in by_src.values():
-        if len(group) < 4:
+        if len(group) < 4 or group[0].metadata["kind"] == "notes":
             continue
         counts = Counter(l.strip() for d in group
                          for l in set(d.page_content.splitlines()) if l.strip())
@@ -36,7 +36,14 @@ def strip_repeated_lines(docs, thresh=0.4):
 
 
 def clean_text(t):
-    t = re.sub(r"-\n(\w)", r"\1", t)          # re-join hyphenated line breaks
+    t = re.sub(r"MITOCW \|[^\n]*\n", " ", t)
+    t = re.sub(r"The following content is provided under a Creative Commons license.*?ocw\.mit\.edu\.?",
+           " ", t, flags=re.S | re.I)
+    t = re.sub(r"\[INAUDIBLE\]", " ", t, flags=re.I)
+    t = re.sub(r"^\s*AUDIENCE:\s*$", " ", t, flags=re.M)      # bare speaker tags
+    t = re.sub(r"^\s*AUDIENCE:\s*", "Student: ", t, flags=re.M)
+    t = re.sub(r"^\s*(Yeah|Okay|OK|Right|Good|Absolutely)\.?\s*$", " ", t, flags=re.M)
+    t = re.sub(r"-\n(\w)", r"\1", t)
     t = re.sub(r"[ \t]+", " ", t)
     t = re.sub(r"\n{3,}", "\n\n", t)
     for pat, rep in TERM_FIXES.items():
@@ -48,7 +55,8 @@ def chunk():
     docs = strip_repeated_lines(load_docs())
     for d in docs:
         d.page_content = clean_text(d.page_content)
-    docs = [d for d in docs if len(d.page_content) > 40]
+    docs = [d for d in docs if len(d.page_content) > 80
+        and not (d.metadata["kind"] == "slides" and d.metadata["locator"] == "p.1")]
 
     splitters = {
         "slides": RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=100),
