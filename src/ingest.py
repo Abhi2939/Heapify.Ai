@@ -71,6 +71,18 @@ def load_plain(path):
         d.metadata = {**base_meta("transcript", path.name), "locator": "transcript"}
     return docs
 
+def load_notes():
+    docs = []
+    for p in sorted(C.STUDY_NOTES.glob("*.md")):
+        text = p.read_text(encoding="utf-8")
+        for sec in re.split(r"(?m)^## ", text)[1:]:      # one doc per "## " section
+            title, _, body = sec.partition("\n")
+            meta = {**base_meta("notes", p.name),
+                    "lecture": f"Study notes: Heap Sort (summary of {C.LECTURE})",
+                    "locator": title.strip()}
+            docs.append(Document(page_content=f"{title.strip()}\n{body.strip()}",
+                                 metadata=meta))
+    return docs
 
 def ingest():
     docs = []
@@ -84,6 +96,7 @@ def ingest():
             docs += load_plain(p)
         elif ext == ".pdf":
             docs += load_pdf(p, "transcript")
+    docs += load_notes()
     return docs
 
 
