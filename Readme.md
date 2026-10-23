@@ -1,15 +1,3 @@
----
-title: Heapify.Ai
-emoji: 🌳
-colorFrom: yellow
-colorTo: gray
-sdk: gradio
-sdk_version: "6.30.0"
-python_version: "3.11"
-app_file: app.py
-pinned: false
----
-
 # Heapify.Ai: A Grounded Heap Sort Tutor
 
 Heapify.Ai is a retrieval-augmented generation (RAG) tutor that answers questions about **heaps, priority queues and heap sort**, using only one source of truth: MIT 6.006 *Introduction to Algorithms* (Fall 2011), Lecture 4, "Heaps and Heap Sort". Every answer cites the lecture material it came from, and questions the material does not cover are refused instead of guessed.
