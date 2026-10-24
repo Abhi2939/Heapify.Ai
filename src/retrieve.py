@@ -1,13 +1,21 @@
+import numpy as np
+from src.embed_index import embed
+
+
+def search(store, question, k):
+    vecs, docs = store
+    scores = vecs @ embed([question])[0]
+    order = np.argsort(-scores)[:k]
+    return [(docs[i], float(scores[i])) for i in order]
+
+
 def _words(t):
     return set(t.lower().split())
 
 
-def retrieve(vs, question, k=4, floor=0.65, fetch=12, dup=0.8):
-    """Return up to k (Document, cosine) pairs, best first, near-duplicates removed."""
-    hits = vs.similarity_search_with_score(question, k=fetch)  # score = cosine
+def retrieve(store, question, k=4, floor=0.65, fetch=12, dup=0.8):
     picked = []
-    for doc, cos in hits:
-        cos = float(cos)
+    for doc, cos in search(store, question, fetch):   # best first
         if cos < floor:
             break
         w = _words(doc.page_content)
@@ -17,14 +25,3 @@ def retrieve(vs, question, k=4, floor=0.65, fetch=12, dup=0.8):
         if len(picked) == k:
             break
     return [(d, c) for d, c, _ in picked]
-
-
-if __name__ == "__main__":
-    from src.embed_index import load
-    vs = load()
-    for q in ["What is the time complexity of heap sort?", "Who won the 2018 World Cup?"]:
-        res = retrieve(vs, q)
-        print(f"\nQ: {q}  ->  {len(res)} chunks above floor")
-        for d, c in res:
-            print(f"  {c:.3f} [{d.metadata['kind']} {d.metadata['locator']}] "
-                  f"{d.page_content[:70]!r}")

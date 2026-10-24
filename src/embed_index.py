@@ -1,35 +1,41 @@
-from langchain_community.vectorstores import FAISS
-from langchain_community.vectorstores.utils import DistanceStrategy
-from langchain_huggingface import HuggingFaceEmbeddings
+import json
+import numpy as np
+from fastembed import TextEmbedding
+from langchain_core.documents import Document
 from src import config as C
-from src.chunk import chunk
 
-EMBED_MODEL = "BAAI/bge-small-en-v1.5"
-INDEX_DIR = C.ROOT / "index"
-STRATEGY = DistanceStrategy.MAX_INNER_PRODUCT
+MODEL = "BAAI/bge-small-en-v1.5"
+INDEX = C.ROOT / "index"
+_model = None
 
 
-def get_embeddings():
-    return HuggingFaceEmbeddings(
-        model_name=EMBED_MODEL,
-        encode_kwargs={"normalize_embeddings": True},  # needed for cosine math below
-    )
+def embed(texts):
+    """Unit-length vectors, so a dot product is the cosine similarity."""
+    global _model
+    if _model is None:
+        _model = TextEmbedding(MODEL)
+    v = np.array(list(_model.embed(texts)), dtype="float32")
+    return v / np.linalg.norm(v, axis=1, keepdims=True)
 
 
 def build():
+    from src.chunk import chunk          # build-time only
     chunks = chunk()
-    vs = FAISS.from_documents(chunks, get_embeddings(),distance_strategy=STRATEGY)
-    INDEX_DIR.mkdir(exist_ok=True)
-    vs.save_local(str(INDEX_DIR))
-    print(f"Indexed {len(chunks)} chunks -> {INDEX_DIR}")
+    vecs = embed([c.page_content for c in chunks])
+    INDEX.mkdir(exist_ok=True)
+    np.save(INDEX / "vectors.npy", vecs)
+    items = [{"text": c.page_content, "meta": c.metadata} for c in chunks]
+    (INDEX / "chunks.json").write_text(
+        json.dumps(items, default=str), encoding="utf-8")
+    print(f"Indexed {len(chunks)} chunks -> {INDEX}")
 
 
 def load():
-    return FAISS.load_local(
-        str(INDEX_DIR), get_embeddings(),
-        allow_dangerous_deserialization=True,  # our own index file
-        distance_strategy=STRATEGY,
-    )
+    vecs = np.load(INDEX / "vectors.npy")
+    items = json.loads((INDEX / "chunks.json").read_text(encoding="utf-8"))
+    docs = [Document(page_content=i["text"], metadata=i["meta"]) for i in items]
+    return vecs, docs
+
 
 if __name__ == "__main__":
     build()

@@ -1,4 +1,5 @@
 from src.embed_index import load
+from src.retrieve import search
 
 vs = load()
 QUESTIONS = [
@@ -20,6 +21,6 @@ QUESTIONS = [
 ]
 for q in QUESTIONS:
     print("\nQ:", q)
-    for doc, score in vs.similarity_search_with_score(q, k=3):
-        print(f"  {float(score):.3f}  [{doc.metadata['kind']} {doc.metadata['locator']}] "
+    for doc, score in search(vs, q, 3):
+        print(f"  {score:.3f}  [{doc.metadata['kind']} {doc.metadata['locator']}] "
               f"{doc.page_content[:70]!r}")
