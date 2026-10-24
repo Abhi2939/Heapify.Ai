@@ -4,7 +4,7 @@ Heapify.Ai is a retrieval-augmented generation (RAG) tutor that answers question
 
 Built for the Immersive Learning Platform, Track 1 (RAG).
 
-- **Live demo:** `https://heapify-ai.onrender.com/` (free tier: the first request after a period of inactivity can take about a minute while the server wakes up)
+- **Live demo:** https://heapify-ai.onrender.com/
 
 ## What it does
 
